@@ -33,8 +33,8 @@ kind: Scaler
 metadata:
   name: scaler-sample
 spec:
-  start: "16:30"                  # Start scaling at 9 AM
-  end: "18:00"                    # Stop scaling at 5 PM
+  start: "16:30"                  # Start scaling at 16:30 AM
+  end: "18:00"                    # Stop scaling at 18:00 PM
   replicas: 5                      # Scale up to 5 pods when in the schedule
   normalReplicasAmount: 2          # Scale down to 2 pods outside the schedule
   timezone: "Asia/Jerusalem"       # Use the specified timezone

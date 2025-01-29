@@ -118,7 +118,7 @@ func (r *ScalerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 		// Only update if replicas need to be changed
 		if *deployment.Spec.Replicas != desiredReplicas {
 			log.Info("Scaling Deployment", "name", deploy.Name, "namespace", deploy.Namespace, "newReplicas", desiredReplicas)
-			replicaCopy := desiredReplicas // Copy value before taking address
+			replicaCopy := desiredReplicas
 			deployment.Spec.Replicas = &replicaCopy
 			err := r.Update(ctx, deployment)
 			if err != nil {
@@ -135,7 +135,7 @@ func (r *ScalerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 func (r *ScalerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&apiv1alpha1.Scaler{}).
-		Owns(&appsv1.Deployment{}). // makes the controller watch Deployments
+		Owns(&appsv1.Deployment{}). // Added to makes the controller watch Deployments
 		Named("scaler").
 		Complete(r)
 }
