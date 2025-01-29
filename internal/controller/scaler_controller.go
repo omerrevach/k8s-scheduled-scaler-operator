@@ -26,6 +26,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
+	"github.com/google/martian/log"
 	"github.com/google/martian/v3/log"
 	apiv1alpha1 "github.com/omerrevach/k8s-scheduled-scaler-operator/api/v1alpha1"
 )
@@ -68,8 +69,19 @@ func (r *ScalerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 	}
 
 	currentTime := time.Now().In(location)
+	// formats the time into 24 hour format instead of 1:20 ot will be 13:20
 	formattedCurrentTime := currentTime.Format("15:04")
-	// TODO(user): your logic here
+	
+	startTime, err := time.ParseInLocation("15:04", scaler.Spec.Start, location)
+	if err != nil {
+		log.Error(err, "Failed to parse the start time", "start: ", scaler.Spec.Start)
+		return ctrl.Result{}, err
+	}
+	endTime, err := time.ParseInLocation("15:04", scaler.Spec.End, location)
+	if err != nil {
+		log.Error(err, "Failed to parse end time", "end: ", scaler.Spec.End)
+		return ctrl.Result{}, err
+	}
 
 	return ctrl.Result{}, nil
 }
