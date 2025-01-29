@@ -28,7 +28,6 @@ type ScalerSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Foo is an example field of Scaler. Edit scaler_types.go to remove/update
 	Start string `json:"start"`
 	End string `json:"end"`
 	Replicas int32 `json:"replicas"`

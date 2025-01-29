@@ -17,6 +17,8 @@ limitations under the License.
 package controller
 
 import (
+	"time"
+
 	"context"
 
 	"k8s.io/apimachinery/pkg/runtime"
@@ -49,6 +51,23 @@ type ScalerReconciler struct {
 func (r *ScalerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = log.FromContext(ctx)
 
+	// says that my controller is working fine
+	log := logger.WithValues("Request.Namespace", req.Namespace, "Request.Name", req.Name)
+	log.Info("Reconcile called")
+
+	// creates an empty instance of my custom resource Scaler (defined in my CRD)
+	scaler := &apiv1alpha1.Scaler{}
+	err := r.Get(ctx, req.NamespacedName, scaler)
+	if err != nil {
+		return ctrl.Result{}, nil
+	}
+	location, error := time.LoadLocation(scaler.Spec.Timezone)
+	if error != nil {
+		panic(error)
+	}
+
+	currentTime := time.Now().In(location)
+	formattedCurrentTime := currentTime.Format("15:04")
 	// TODO(user): your logic here
 
 	return ctrl.Result{}, nil

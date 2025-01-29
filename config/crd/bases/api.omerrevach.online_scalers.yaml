@@ -39,10 +39,33 @@ spec:
           spec:
             description: ScalerSpec defines the desired state of Scaler.
             properties:
-              foo:
-                description: Foo is an example field of Scaler. Edit scaler_types.go
-                  to remove/update
+              deployments:
+                items:
+                  properties:
+                    name:
+                      type: string
+                    namespace:
+                      type: string
+                  required:
+                  - name
+                  - namespace
+                  type: object
+                type: array
+              end:
                 type: string
+              replicas:
+                format: int32
+                type: integer
+              start:
+                type: string
+              timezone:
+                type: string
+            required:
+            - deployments
+            - end
+            - replicas
+            - start
+            - timezone
             type: object
           status:
             description: ScalerStatus defines the observed state of Scaler.
