@@ -33,6 +33,12 @@ type ScalerSpec struct {
 	End string `json:"end"`
 	Replicas int32 `json:"replicas"`
 	Timezone string `json:"timezone"`
+	Deployments []DeploymentsReference `json:"deployments"`
+}
+
+type DeploymentsReference struct {
+	Name string `json:"name"`
+	Namespace string `json:"namespace"`
 }
 
 // ScalerStatus defines the observed state of Scaler.
