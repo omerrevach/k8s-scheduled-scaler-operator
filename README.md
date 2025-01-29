@@ -48,6 +48,28 @@ spec:
 ```
 >**Warning**  - This is case sensitive and make sure the time is as shown in the example and the timezone is correctly spelled
 
+>**If you are using a helm chart then add this file to the templates folder**
+
+---
+
+## 🤝 Contributing & Feedback
+We welcome contributions to improve the **Kubernetes Scheduled Scaler Operator**! 🚀  
+
+If you'd like to **report an issue**, **suggest a feature**, or **submit a pull request**, feel free to:
+
+- **📌 Open an Issue** – Report bugs or request features in the [Issues Tab](https://github.com/omerrevach/k8s-scheduled-scaler-operator/issues).
+- **🛠 Submit a Pull Request** – Contribute improvements via [Pull Requests](https://github.com/omerrevach/k8s-scheduled-scaler-operator/pulls).
+- **💬 Share Your Thoughts** – Start a discussion or ask questions in [Discussions](https://github.com/omerrevach/k8s-scheduled-scaler-operator/discussions).
+
+## ⭐ Support the Project
+If you find this operator useful:
+- 🌟 **Star this repository** to show your support!
+- 🍴 **Fork the project** and experiment with your own ideas.
+- 🔄 **Share feedback** – Your suggestions help make this project better!
+
+---
+
+💡 **Let's build something amazing together!** 🚀🔥
 
 
 
@@ -55,7 +77,84 @@ spec:
 
 
 
-
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
+---
 
 
 ## build and publish image for local deployment:
