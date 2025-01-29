@@ -62,8 +62,8 @@ func (r *ScalerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 	if err != nil {
 		return ctrl.Result{}, nil
 	}
-	location, error := time.LoadLocation(scaler.Spec.Timezone)
-	if error != nil {
+	location, err := time.LoadLocation(scaler.Spec.Timezone)
+	if err != nil {
 		log.Error(err, "Failed to load the timezone", "timezone: ", scaler.Spec.Timezone)
 	}
 	
@@ -79,21 +79,38 @@ func (r *ScalerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 	}
 
 	currentTime := time.Now().In(location)
+	var replicas int32 = scaler.Spec.Replicas
 
 	log.Info("Start Time: ", "startTime", startTime)
 	log.Info("End Time: ", "endTime", endTime)
 	log.Info("Current Time: ", "currentTime", currentTime)
 
-	var desiredReplicas int32
-	// checks if the times is after and before the specified time
 	if currentTime.After(startTime) && currentTime.Before(endTime) {
-		desiredReplicas = scaler.Spec.Replicas // scale up the pods
-	} else {
-		desiredReplicas = scaler.Spec.NormalReplicasAmount // scale down the pods
+		for _, deploy := range scaler.Spec.Deployments {
+			deployment := &appsv1.Deployment{}
+			err := r.Get(ctx, types.NamespacedName{
+				Namespace: deploy.Namespace, 
+				Name: deploy.Name,
+			},
+				deployment,
+			)
+			if err != nil {
+				log.Error(err, "Failed to get deployment", "name", deploy.Name, "namespace", deploy.Namespace)
+				continue // Skip this deployment and move to the next one
+			}
+
+			if *deployment.Spec.Replicas != replicas {
+				log.Info("Scaling Deployment", "name", deploy.Name, "namespace", deploy.Namespace)
+				deployment.Spec.Replicas = &replicas
+				err := r.Update(ctx, deployment)
+				if err != nil {
+					log.Error(err, "Failed to update deployment", "name", deploy.Name, "namespace", deploy.Namespace)
+				}
+			}
+		}
 	}
 
-
-	return ctrl.Result{}, nil
+	return ctrl.Result{RequeueAfter: time.Duration(30 * time.Second)}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
