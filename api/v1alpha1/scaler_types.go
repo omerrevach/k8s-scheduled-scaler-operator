@@ -28,16 +28,16 @@ type ScalerSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	Start string `json:"start"`
-	End string `json:"end"`
-	Replicas int32 `json:"replicas"`
-	NormalReplicasAmount int32 `json:"normalReplicasAmount"`
-	Timezone string `json:"timezone"`
-	Deployments []DeploymentsReference `json:"deployments"`
+	Start                string                 `json:"start"`
+	End                  string                 `json:"end"`
+	Replicas             int32                  `json:"replicas"`
+	NormalReplicasAmount int32                  `json:"normalReplicasAmount"`
+	Timezone             string                 `json:"timezone"`
+	Deployments          []DeploymentsReference `json:"deployments"`
 }
 
 type DeploymentsReference struct {
-	Name string `json:"name"`
+	Name      string `json:"name"`
 	Namespace string `json:"namespace"`
 }
 

@@ -31,7 +31,6 @@ import (
 	apiv1alpha1 "github.com/omerrevach/k8s-scheduled-scaler-operator/api/v1alpha1"
 )
 
-
 // ScalerReconciler reconciles a Scaler object
 type ScalerReconciler struct {
 	client.Client
@@ -52,94 +51,91 @@ type ScalerReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.20.0/pkg/reconcile
 func (r *ScalerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	// says that my controller is working fine
+	// Logging to indicate reconciliation loop is running
 	log := log.FromContext(ctx)
 	log.Info("Reconcile called")
 
-	// creates an empty instance of my custom resource Scaler (defined in my CRD)
+	// Fetch the Scaler custom resource
 	scaler := &apiv1alpha1.Scaler{}
 	err := r.Get(ctx, req.NamespacedName, scaler)
 	if err != nil {
-		return ctrl.Result{}, nil
+		log.Error(err, "Failed to fetch Scaler resource")
+		return ctrl.Result{}, client.IgnoreNotFound(err) // Ignore not found errors
 	}
+
+	// Load the timezone specified in the Scaler CR
 	location, err := time.LoadLocation(scaler.Spec.Timezone)
 	if err != nil {
-		log.Error(err, "Failed to load the timezone", "timezone: ", scaler.Spec.Timezone)
+		log.Error(err, "Failed to load the timezone", "timezone", scaler.Spec.Timezone)
+		return ctrl.Result{}, err
 	}
-	
-	startTime, err := time.ParseInLocation("15:04", scaler.Spec.Start, location)
+
+	// Use today's date for correct time parsing
+	currentDate := time.Now().Format("2006-01-02")
+	startTime, err := time.ParseInLocation("2006-01-02 15:04", currentDate+" "+scaler.Spec.Start, location)
 	if err != nil {
 		log.Error(err, "Failed to parse the start time", "start", scaler.Spec.Start)
 		return ctrl.Result{}, err
 	}
-	endTime, err := time.ParseInLocation("15:04", scaler.Spec.End, location)
+	endTime, err := time.ParseInLocation("2006-01-02 15:04", currentDate+" "+scaler.Spec.End, location)
 	if err != nil {
 		log.Error(err, "Failed to parse end time", "end", scaler.Spec.End)
 		return ctrl.Result{}, err
 	}
 
+	// Get the current time in the user's timezone
 	currentTime := time.Now().In(location)
-	var replicas int32 = scaler.Spec.Replicas
 
-	log.Info("Start Time: ", "startTime", startTime)
-	log.Info("End Time: ", "endTime", endTime)
-	log.Info("Current Time: ", "currentTime", currentTime)
+	// Debugging: Print parsed times
+	log.Info(fmt.Sprintf("Parsed Times -> Start: %v | End: %v | Now: %v", startTime, endTime, currentTime))
 
+	// Determine whether to scale up or down
+	var desiredReplicas int32
 	if currentTime.After(startTime) && currentTime.Before(endTime) {
-		for _, deploy := range scaler.Spec.Deployments {
-			deployment := &appsv1.Deployment{}
-			err := r.Get(ctx, types.NamespacedName{
-				Namespace: deploy.Namespace, 
-				Name: deploy.Name,
-			},
-				deployment,
-			)
-			if err != nil {
-				log.Error(err, "Failed to get deployment", "name", deploy.Name, "namespace", deploy.Namespace)
-				continue // Skip this deployment and move to the next one
-			}
-
-			if *deployment.Spec.Replicas != replicas {
-				log.Info("Scaling Up Deployment", "name", deploy.Name, "namespace", deploy.Namespace)
-				deployment.Spec.Replicas = &replicas
-				err := r.Update(ctx, deployment)
-				if err != nil {
-					log.Error(err, "Failed to update deployment", "name", deploy.Name, "namespace", deploy.Namespace)
-				}
-			}
-		}
+		desiredReplicas = scaler.Spec.Replicas // Scale up
 	} else {
-		for _, deploy := range scaler.Spec.Deployments {
-			deployment := &appsv1.Deployment{}
-			err := r.Get(ctx, types.NamespacedName{
-				Namespace: deploy.Namespace, 
-				Name: deploy.Name,
-			},
-				deployment,
-			)
-			if err != nil {
-				log.Error(err, "Failed to get deployment", "name", deploy.Name, "namespace", deploy.Namespace)
-				continue // Skip this deployment and move to the next one
-			}
+		desiredReplicas = scaler.Spec.NormalReplicasAmount // Scale down
+	}
 
-			if *deployment.Spec.Replicas != scaler.Spec.NormalReplicasAmount {
-				log.Info("Scaling Down Deployment", "name", deploy.Name, "namespace", deploy.Namespace)
-				deployment.Spec.Replicas = &scaler.Spec.NormalReplicasAmount
-				err := r.Update(ctx,deployment)
-				if err != nil {
-					log.Error(err, "Failed to update deployment", "name", deploy.Name, "namespace", deploy.Namespace)
-				}
+	// Scale each deployment in the list
+	for _, deploy := range scaler.Spec.Deployments {
+		deployment := &appsv1.Deployment{}
+		err := r.Get(ctx, types.NamespacedName{
+			Namespace: deploy.Namespace,
+			Name:      deploy.Name,
+		}, deployment)
+		if err != nil {
+			log.Error(err, "Failed to get deployment", "name", deploy.Name, "namespace", deploy.Namespace)
+			continue // Skip this deployment and move to the next one
+		}
+
+		// Ensure the replicas field is not nil before dereferencing
+		if deployment.Spec.Replicas == nil {
+			log.Info("Replicas field was nil, initializing to desired count", "name", deploy.Name, "namespace", deploy.Namespace, "replicas", desiredReplicas)
+			deployment.Spec.Replicas = &desiredReplicas
+		}
+
+		// Only update if replicas need to be changed
+		if *deployment.Spec.Replicas != desiredReplicas {
+			log.Info("Scaling Deployment", "name", deploy.Name, "namespace", deploy.Namespace, "newReplicas", desiredReplicas)
+			replicaCopy := desiredReplicas // Copy value before taking address
+			deployment.Spec.Replicas = &replicaCopy
+			err := r.Update(ctx, deployment)
+			if err != nil {
+				log.Error(err, "Failed to update deployment", "name", deploy.Name, "namespace", deploy.Namespace)
 			}
 		}
 	}
 
-	return ctrl.Result{RequeueAfter: time.Duration(30 * time.Second)}, nil
+	// Requeue every 30 seconds to continuously check scaling conditions
+	return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *ScalerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&apiv1alpha1.Scaler{}).
+		Owns(&appsv1.Deployment{}). // makes the controller watch Deployments
 		Named("scaler").
 		Complete(r)
 }

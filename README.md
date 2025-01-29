@@ -1,6 +1,33 @@
 # k8s-operator
 // TODO(user): Add simple overview of use/purpose
 
+## build and publish image for deployment:
+```
+make docker-build IMG=rebachi/scheduled-scaler-op:v1
+make docker-push IMG=rebachi/scheduled-scaler-op:v1
+make deploy IMG=rebachi/scheduled-scaler-op:v1
+kubectl get pods -n k8s-operator-system
+
+cat config/crd/bases/api.omerrevach.online_scalers.yaml \
+    config/rbac/role.yaml \
+    config/rbac/role_binding.yaml \
+    config/manager/manager.yaml > install.yaml
+```
+kubectl apply -f scaler-sample.yaml
+
+## To start the Operator:
+```
+kubectl apply -f config/crd/bases/api.omerrevach.online_scalers.yaml
+make run
+
+kubectl apply -f config/crd/bases/api.omerrevach.online_scalers.yaml
+
+kubectl get crd
+
+kubectl delete -f config/crd/bases/api.omerrevach.online_scalers.yaml
+kubectl delete -f config/samples/api_v1alpha1_scaler.yaml
+```
+
 ## Description
 // TODO(user): An in-depth paragraph about your project and overview of use
 
