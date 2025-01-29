@@ -100,9 +100,32 @@ func (r *ScalerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 			}
 
 			if *deployment.Spec.Replicas != replicas {
-				log.Info("Scaling Deployment", "name", deploy.Name, "namespace", deploy.Namespace)
+				log.Info("Scaling Up Deployment", "name", deploy.Name, "namespace", deploy.Namespace)
 				deployment.Spec.Replicas = &replicas
 				err := r.Update(ctx, deployment)
+				if err != nil {
+					log.Error(err, "Failed to update deployment", "name", deploy.Name, "namespace", deploy.Namespace)
+				}
+			}
+		}
+	} else {
+		for _, deploy := range scaler.Spec.Deployments {
+			deployment := &appsv1.Deployment{}
+			err := r.Get(ctx, types.NamespacedName{
+				Namespace: deploy.Namespace, 
+				Name: deploy.Name,
+			},
+				deployment,
+			)
+			if err != nil {
+				log.Error(err, "Failed to get deployment", "name", deploy.Name, "namespace", deploy.Namespace)
+				continue // Skip this deployment and move to the next one
+			}
+
+			if *deployment.Spec.Replicas != scaler.Spec.NormalReplicasAmount {
+				log.Info("Scaling Down Deployment", "name", deploy.Name, "namespace", deploy.Namespace)
+				deployment.Spec.Replicas = &scaler.Spec.NormalReplicasAmount
+				err := r.Update(ctx,deployment)
 				if err != nil {
 					log.Error(err, "Failed to update deployment", "name", deploy.Name, "namespace", deploy.Namespace)
 				}
