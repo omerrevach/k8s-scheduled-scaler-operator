@@ -10,6 +10,7 @@ spec:
   start: "16:30"
   end: "18:00" 
   replicas: 5
+  normalReplicasAmount: 2
   timezone: "Asia/Jerusalem"
   deployments:
     - name: test

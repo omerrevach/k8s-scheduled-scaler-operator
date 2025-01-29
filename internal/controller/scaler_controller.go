@@ -17,6 +17,7 @@ limitations under the License.
 package controller
 
 import (
+	"fmt"
 	"time"
 
 	"context"
@@ -26,8 +27,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	"github.com/google/martian/log"
-	"github.com/google/martian/v3/log"
 	apiv1alpha1 "github.com/omerrevach/k8s-scheduled-scaler-operator/api/v1alpha1"
 )
 
@@ -54,7 +53,7 @@ func (r *ScalerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 	_ = log.FromContext(ctx)
 
 	// says that my controller is working fine
-	log := logger.WithValues("Request.Namespace", req.Namespace, "Request.Name", req.Name)
+	log := log.FromContext(ctx)
 	log.Info("Reconcile called")
 
 	// creates an empty instance of my custom resource Scaler (defined in my CRD)
@@ -67,10 +66,6 @@ func (r *ScalerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 	if error != nil {
 		log.Error(err, "Failed to load the timezone", "timezone: ", scaler.Spec.Timezone)
 	}
-
-	currentTime := time.Now().In(location)
-	// formats the time into 24 hour format instead of 1:20 ot will be 13:20
-	formattedCurrentTime := currentTime.Format("15:04")
 	
 	startTime, err := time.ParseInLocation("15:04", scaler.Spec.Start, location)
 	if err != nil {
@@ -82,6 +77,18 @@ func (r *ScalerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 		log.Error(err, "Failed to parse end time", "end: ", scaler.Spec.End)
 		return ctrl.Result{}, err
 	}
+
+	currentTime := time.Now().In(location)
+	// formats the time into 24 hour format instead of 1:20 ot will be 13:20
+	currentTimeOfDay := currentTime.Format("15:04")
+
+	fmt.Println(startTime)
+	fmt.Println(endTime)
+	fmt.Println(currentTimeOfDay)
+
+	// if currentTimeOfDay >= scaler.Spec.Start && currentTimeOfDay <= scaler.Spec.End {
+	// 	desiredReplicas := scaler.Spec.Replicas
+	// } else
 
 	return ctrl.Result{}, nil
 }

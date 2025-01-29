@@ -53,6 +53,9 @@ spec:
                 type: array
               end:
                 type: string
+              normalReplicasAmount:
+                format: int32
+                type: integer
               replicas:
                 format: int32
                 type: integer
@@ -63,6 +66,7 @@ spec:
             required:
             - deployments
             - end
+            - normalReplicasAmount
             - replicas
             - start
             - timezone

@@ -31,6 +31,7 @@ type ScalerSpec struct {
 	Start string `json:"start"`
 	End string `json:"end"`
 	Replicas int32 `json:"replicas"`
+	NormalReplicasAmount int32 `json:"normalReplicasAmount"`
 	Timezone string `json:"timezone"`
 	Deployments []DeploymentsReference `json:"deployments"`
 }
