@@ -1,7 +1,64 @@
-# k8s-operator
-// TODO(user): Add simple overview of use/purpose
+# 🚀 Kubernetes Scheduled Scaler Operator
 
-## build and publish image for deployment:
+**Kubernetes Scheduled Scaler Operator** provides an automated solution for scaling deployments based on predefined time windows. This operator allows users to schedule scaling events, ensuring that deployments dynamically adjust their replica count during specific timeframes. 
+
+By intelligently managing replica counts, this operator helps **optimize resource utilization, reduce costs, and enhance workload performance** by scaling applications up when needed and down during off-peak hours.
+
+---
+
+## 📌 Features
+✅ **Time-Based Scaling** – Define time windows for scaling up/down  
+✅ **Automatic Resource Optimization** – Improve efficiency and reduce costs  
+✅ **Multi-Deployment Support** – Scale multiple deployments in different namespaces  
+✅ **Timezone-Aware** – Configure scaling schedules based on different time zones  
+
+---
+
+### How to use:
+**Apply the operator to your cluster:**
+```
+kubectl apply -f https://raw.githubusercontent.com/omerrevach/k8s-scheduled-scaler-operator/main/install.yaml
+```
+
+**Wait about 30 seconds and run this command to check if its up**
+```
+kubectl get pod -l control-plane=controller-manager -n k8s-operator-system
+
+# should see something like this - k8s-operator-controller-manager-5547d68d59-czlkw
+```
+**Create scheduled-scaler.yaml to store the configuration**
+```
+apiVersion: api.omerrevach.online/v1alpha1
+kind: Scaler
+metadata:
+  name: scaler-sample
+spec:
+  start: "16:30"                  # Start scaling at 9 AM
+  end: "18:00"                    # Stop scaling at 5 PM
+  replicas: 5                      # Scale up to 5 pods when in the schedule
+  normalReplicasAmount: 2          # Scale down to 2 pods outside the schedule
+  timezone: "Asia/Jerusalem"       # Use the specified timezone
+  deployments:                     
+    - name: app1
+      namespace: default
+    - name: app2                    # Add here in the deployments section all the deployments you want to scale
+      namespace: default
+    - name: app3
+      namespace: default
+```
+>**Warning**  - This is case sensitive and make sure the time is as shown in the example and the timezone is correctly spelled
+
+
+
+
+
+
+
+
+
+
+
+## build and publish image for local deployment:
 ```
 make docker-build IMG=rebachi/scheduled-scaler-op:v1
 make docker-push IMG=rebachi/scheduled-scaler-op:v1
@@ -13,9 +70,8 @@ cat config/crd/bases/api.omerrevach.online_scalers.yaml \
     config/rbac/role_binding.yaml \
     config/manager/manager.yaml > install.yaml
 ```
-kubectl apply -f scaler-sample.yaml
 
-## To start the Operator:
+## To start the Operator locally:
 ```
 kubectl apply -f config/crd/bases/api.omerrevach.online_scalers.yaml
 make run
