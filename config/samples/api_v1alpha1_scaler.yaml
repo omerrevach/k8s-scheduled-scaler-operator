@@ -13,5 +13,9 @@ spec:
   normalReplicasAmount: 2
   timezone: "Asia/Jerusalem"
   deployments:
-    - name: test
+    - name: app1
+      namespace: default
+    - name: app2
+      namespace: default
+    - name: app3
       namespace: default

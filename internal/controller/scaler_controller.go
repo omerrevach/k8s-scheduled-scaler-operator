@@ -17,18 +17,20 @@ limitations under the License.
 package controller
 
 import (
+	"context"
 	"fmt"
 	"time"
 
-	"context"
-
+	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	apiv1alpha1 "github.com/omerrevach/k8s-scheduled-scaler-operator/api/v1alpha1"
 )
+
 
 // ScalerReconciler reconciles a Scaler object
 type ScalerReconciler struct {
@@ -50,8 +52,6 @@ type ScalerReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.20.0/pkg/reconcile
 func (r *ScalerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
-
 	// says that my controller is working fine
 	log := log.FromContext(ctx)
 	log.Info("Reconcile called")
@@ -69,26 +69,29 @@ func (r *ScalerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 	
 	startTime, err := time.ParseInLocation("15:04", scaler.Spec.Start, location)
 	if err != nil {
-		log.Error(err, "Failed to parse the start time", "start: ", scaler.Spec.Start)
+		log.Error(err, "Failed to parse the start time", "start", scaler.Spec.Start)
 		return ctrl.Result{}, err
 	}
 	endTime, err := time.ParseInLocation("15:04", scaler.Spec.End, location)
 	if err != nil {
-		log.Error(err, "Failed to parse end time", "end: ", scaler.Spec.End)
+		log.Error(err, "Failed to parse end time", "end", scaler.Spec.End)
 		return ctrl.Result{}, err
 	}
 
 	currentTime := time.Now().In(location)
-	// formats the time into 24 hour format instead of 1:20 ot will be 13:20
-	currentTimeOfDay := currentTime.Format("15:04")
 
-	fmt.Println(startTime)
-	fmt.Println(endTime)
-	fmt.Println(currentTimeOfDay)
+	log.Info("Start Time: ", "startTime", startTime)
+	log.Info("End Time: ", "endTime", endTime)
+	log.Info("Current Time: ", "currentTime", currentTime)
 
-	// if currentTimeOfDay >= scaler.Spec.Start && currentTimeOfDay <= scaler.Spec.End {
-	// 	desiredReplicas := scaler.Spec.Replicas
-	// } else
+	var desiredReplicas int32
+	// checks if the times is after and before the specified time
+	if currentTime.After(startTime) && currentTime.Before(endTime) {
+		desiredReplicas = scaler.Spec.Replicas // scale up the pods
+	} else {
+		desiredReplicas = scaler.Spec.NormalReplicasAmount // scale down the pods
+	}
+
 
 	return ctrl.Result{}, nil
 }
