@@ -7,3 +7,10 @@ metadata:
   name: scaler-sample
 spec:
   # TODO(user): Add fields here
+  start: "16:30"
+  end: "18:00" 
+  replicas: 5
+  timezone: "Asia/Jerusalem"
+  deployments:
+    - name: test
+      namespace: default
