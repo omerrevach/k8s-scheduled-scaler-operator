@@ -26,6 +26,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
+	"github.com/google/martian/v3/log"
 	apiv1alpha1 "github.com/omerrevach/k8s-scheduled-scaler-operator/api/v1alpha1"
 )
 
@@ -63,7 +64,7 @@ func (r *ScalerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 	}
 	location, error := time.LoadLocation(scaler.Spec.Timezone)
 	if error != nil {
-		panic(error)
+		log.Error(err, "Failed to load the timezone", "timezone: ", scaler.Spec.Timezone)
 	}
 
 	currentTime := time.Now().In(location)
